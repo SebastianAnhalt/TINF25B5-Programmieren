@@ -1,5 +1,7 @@
+package de.dhbwka.java.exercise.math;
+
 public class Array {
-    public static void main() {
+    public static void main(String[] args) {
         int size = 10;
         double[] array = new double[size];
         for (int i = 0; i < array.length; i++) {

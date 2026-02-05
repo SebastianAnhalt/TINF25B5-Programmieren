@@ -9,6 +9,7 @@ public class Babylon {
         System.out.print("Wurzel aus welcher Zahl ziehen? ");
 
         float a = scan.nextFloat();
+        scan.close();
 
         if(a>=0){
             double xn;
@@ -20,6 +21,5 @@ public class Babylon {
             } while(Math.abs(xn1-xn)>0.000001);
             System.out.println("Die Wurzel aus " + a + " ist " + xn1);
         }
-        scan.close();
-    }    
+    }
 }

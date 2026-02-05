@@ -12,7 +12,6 @@ public class Quadratics {
 
     public static void calculate(int a, int b, int c) {
         double[] x = new double[2];
-        int d = 0;
 
         if(a == 0)
         {
@@ -29,7 +28,7 @@ public class Quadratics {
         }
         else
         {
-            d = b*b-4*a*c;
+            int d = b*b-4*a*c;
             if(d >= 0)
             {
                 x[0] = (-b+Math.sqrt(d))/(2*a);
