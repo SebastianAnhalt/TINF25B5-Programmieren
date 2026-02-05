@@ -1,4 +1,4 @@
-package de.dhbwka.java.exercise;
+package de.dhbwka.java.exercise.math;
 
 public class MidnightFormula {
     public static void main(String[] args) {

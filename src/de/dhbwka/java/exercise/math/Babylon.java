@@ -1,3 +1,4 @@
+package de.dhbwka.java.exercise.math;
 
 import java.util.Scanner;
 
