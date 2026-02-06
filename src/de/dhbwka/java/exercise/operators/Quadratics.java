@@ -14,10 +14,10 @@ public class Quadratics {
 
         if (a == 0) {
             if (b == 0) {
-                x[0] = (c * (-1));
+                x[0] = -c;
                 System.out.println("Lösung: " + x[0]);
             } else {
-                x[0] = (double) (c * (-1)) / (b);
+                x[0] = (double) -c / b;
                 System.out.println("Lösung: " + x[0]);
             }
         } else {
