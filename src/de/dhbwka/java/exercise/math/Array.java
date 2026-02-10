@@ -1,9 +1,11 @@
+package de.dhbwka.java.exercise.math;
+
 public class Array {
-    public static void main() {
+    public static void main(String[] args) {
         int size = 10;
         double[] array = new double[size];
         for (int i = 0; i < array.length; i++) {
-            array[i] = Math.random()*100;
+            array[i] = Math.random() * 100;
         }
         for (double v : array) {
             System.out.println(v);
@@ -18,9 +20,9 @@ public class Array {
             }
             sum += array[i];
         }
-        System.out.println("Maximums index "+maxIndex);
-        System.out.println("maximum "+max);
-        double avg = (double) 1 /size;
-        System.out.println("Average "+(avg*sum));
+        System.out.println("Maximums index " + maxIndex);
+        System.out.println("maximum " + max);
+        double avg = (double) 1 / size;
+        System.out.println("Average " + (avg * sum));
     }
 }

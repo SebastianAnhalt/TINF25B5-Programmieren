@@ -20,12 +20,11 @@ public class MidnightFormula {
             System.out.println(discriminant);
 
             if (discriminant == 0) {
-                double x = (-b ) / (2*a);
+                double x = (-b) / (2 * a);
                 System.out.println("Eine Nullstelle: " + x);
-            }
-            else if (discriminant > 0) {
-                double x1 = (-b - Math.sqrt(discriminant)) / (2*a);
-                double x2 = (-b + Math.sqrt(discriminant)) / (2*a);
+            } else if (discriminant > 0) {
+                double x1 = (-b - Math.sqrt(discriminant)) / (2 * a);
+                double x2 = (-b + Math.sqrt(discriminant)) / (2 * a);
                 System.out.printf("Zwei Nullstellen: %f und %f", x1, x2);
             } else {
                 System.out.println("Keine Nullstelle");
