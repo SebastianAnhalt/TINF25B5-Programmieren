@@ -14,7 +14,7 @@ import java.util.Random;
 public class StandardDeviation {
 
     public static void main(String[] args) {
-        int n = 33;
+        int n = 100;
         Random rnd = new Random();
         int[] x = new int[n];
 
@@ -25,7 +25,7 @@ public class StandardDeviation {
             sum += x[i]; // sum up the x[i] gleich bedeutend wie sum = sum + x[i]
         }
         double average = ((double) sum / n);
-        System.out.printf("Mittelwert: %.8f\n", average);
+        System.out.printf("Mittelwert: %.4f\n", average);
 
         // calculate standard deviation
         double devSum = 0;
