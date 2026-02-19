@@ -11,9 +11,9 @@ classDiagram
         +setY(double y) void
         +toString() String
         +distanceToOrigin() double
-        +mirrorAtXAxis() Point
-        +mirrorAtYAxis() Point
-        +mirrorAtOrigin() Point
-        +distanceTo(Point other) double
+        +mirrorXAxis() Point
+        +mirrorYAxis() Point
+        +mirrorOrigin() Point
+        +getDistance(Point other) double
     }
 ```
