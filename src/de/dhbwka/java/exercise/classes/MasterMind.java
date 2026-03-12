@@ -41,6 +41,7 @@ public class MasterMind {
         for (int i = 0; i < 5; i++) {
             System.out.print(computerKombination[i]);
         }
+    }
 
     void rateSchleife() {
         for (versuch = 0; versuch < 50; versuch++) {
