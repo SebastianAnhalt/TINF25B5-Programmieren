@@ -3,24 +3,24 @@ package de.dhbwka.java.exercise.classes;
 /**
  * @author DHBW lecturer
  * @version 1.0
- * 
+ *
  * Part of lectures on 'Programming in Java'. Baden-Wuerttemberg
  * Cooperative State University.
- * 
+ *
  * (C) 2015 by J. Sidler, T. Schlachter, C. Schmitt, W. Suess
  */
-public class Account {
+public class Account_Master {
 
 	private int number;
 	private String holder;
 	private int balance;
 	private int limit;	// limit is a positive value
 
-	public Account() {
+	public Account_Master() {
 		this(-1, "n/n", 0, 0);
 	}
-	
-	public Account(int number, String holder, int balance, int limit) {
+
+	public Account_Master(int number, String holder, int balance, int limit) {
 		super();
 		this.number = number;
 		this.holder = holder;
@@ -33,12 +33,12 @@ public class Account {
 	}
 
 	public void processDeposit(int amount) {
-		if (amount > 0) 
+		if (amount > 0)
 			this.balance += amount;
 	}
 
 	public void processPayment(int amount) {
-		if (amount > 0 && balance-amount >= -limit) 
+		if (amount > 0 && balance-amount >= -limit)
 			this.balance -= amount;
 		else
 			System.err.println("Deckung nicht ausreichend!");
@@ -46,14 +46,14 @@ public class Account {
 
 	@Override
 	public String toString() {
-		return "Konto Nr. " + number 
+		return "Konto Nr. " + number
 				+ " (" + holder + "), "
 				+ "Stand: " + balance + " ct, "
 				+ "Limit " + limit + " ct";
 	}
-	
+
 	public static void main(String[] args) {
-		Account account = new Account(4711, "Donald Duck", 500, 1000);
+		Account_Master account = new Account_Master(4711, "Donald Duck", 500, 1000);
 		System.out.println(account);
 		account.processDeposit(200);
 		System.out.println(account);
@@ -62,5 +62,5 @@ public class Account {
 		account.processPayment(2000);
 		System.out.println(account);
 	}
-	
+
 }
