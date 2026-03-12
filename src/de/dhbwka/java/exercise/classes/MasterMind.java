@@ -7,6 +7,7 @@ package de.dhbwka.java.exercise.classes;
  * Part of lectures on 'Programming in Java'. Baden-Wuerttemberg
  * Cooperative State University.
  * 
+
  * (C) 2015 by J. Sidler, T. Schlachter, C. Schmitt, W. Suess
  */
 public class MasterMind {
@@ -40,14 +41,6 @@ public class MasterMind {
         for (int i = 0; i < 5; i++) {
             System.out.print(computerKombination[i]);
         }
-        System.out.println("");
-    }
-
-
-
-
-
-
 
     void rateSchleife() {
         for (versuch = 0; versuch < 50; versuch++) {
@@ -102,9 +95,6 @@ public class MasterMind {
                     + falscheStellen[k]);
         }
     }
-
-
-
 
 
     void richtigeBuchstaben() {
