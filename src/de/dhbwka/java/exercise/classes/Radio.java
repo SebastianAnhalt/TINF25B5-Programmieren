@@ -58,9 +58,8 @@ public class Radio {
 
     @Override
     public String toString() {
-        return "Radio " + (on ? "an" : "aus")
-                + "; Lautstärke " + volume
-                + "; Frequenz " + frequency + " MHz";
+        String an_aus = this.on ? "an" : "aus";
+        return "Radio " + an_aus + "; Lautstärke " + this.volume + "; Frequenz " + this.frequency + " MHz";
     }
 
     public static void main(String[] args) {

@@ -1,0 +1,7 @@
+Glowworm;Lighting up your ideas, one pixel at a time;IMG;0.18
+Talkzilla;Ready to roar!;TEXT;0.04
+Taurus;Always a month ahead!;TEXT;0.03
+CenterCruise;Where your imagination takes the wheel, and we just steer the ship;IMG;0.15
+BavarderTGP;Parlez, On Ecoute;TEXT;0.02
+ByteMe;Let’s get digital!;TEXT;0.05
+LoremAIpsum;Where filler meets functionality;TEXT;0.01
