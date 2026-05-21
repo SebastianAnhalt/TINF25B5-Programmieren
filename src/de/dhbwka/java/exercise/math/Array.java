@@ -1,3 +1,5 @@
+package de.dhbwka.java.exercise.math;
+
 public class Array {
     public static void main() {
         int size = 10;
