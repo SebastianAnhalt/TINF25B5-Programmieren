@@ -1,4 +1,4 @@
-package de.dhbwka.java.exercise.joption;
+package de.dhbwka.java.exercise.ui.joption;
 import javax.swing.*;
 public class JOptionPaneDialog {
     public static void main(String[] args) {
