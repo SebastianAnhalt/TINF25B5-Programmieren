@@ -58,4 +58,8 @@ public class FromServer implements ExchangeRateSource{
     public  double eur() {
         return map.get("EUR");
     }
+
+    public double getValue(String currency) {
+        return map.get(currency);
+    }
 }
