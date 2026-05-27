@@ -1,4 +1,4 @@
-package de.dhbwka.java.exercise.ui;
+package de.dhbwka.java.exercise.ui.currency;
 
 import javax.swing.*;
 import java.awt.*;
