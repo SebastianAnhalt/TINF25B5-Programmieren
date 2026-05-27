@@ -14,7 +14,7 @@ public class ExchangeRateSourceService implements ExchangeRateSource{
     private final HttpClient client;
 
 
-    public FromServer() {
+    public ExchangeRateSourceService() {
         try {
             url = URI.create("https://open.er-api.com/v6/latest/USD");
             this.client = HttpClient.newHttpClient();

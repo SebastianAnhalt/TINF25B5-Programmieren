@@ -14,9 +14,10 @@ public class CurrencyCalculator extends JFrame {
 
     // Attribute (Objekt Variablen) of the Top-Level Class [cite: 82]
     private JTextField inputField;
-    private static final double EXCHANGE_RATE = 1.10;
+    private final ExchangeRateSource exchangeRateSource;
 
-    public CurrencyCalculator() {
+    public CurrencyCalculator(ExchangeRateSource exchangeRateSource) {
+        this.exchangeRateSource = exchangeRateSource;
         setTitle("Currency Calculator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(360, 80);
@@ -53,7 +54,7 @@ public class CurrencyCalculator extends JFrame {
         eurToUsdButton.addActionListener(e -> {
             try {
                 double eur = Double.parseDouble(inputField.getText());
-                double usd = eur * EXCHANGE_RATE;
+                double usd = eur * exchangeRateSource.eur();
                 inputField.setText(String.format("%.2f", usd));
             } catch (NumberFormatException ex) {
                 showError();
@@ -63,7 +64,7 @@ public class CurrencyCalculator extends JFrame {
         usdToEurButton.addActionListener(e -> {
             try {
                 double usd = Double.parseDouble(inputField.getText());
-                double eur = usd / EXCHANGE_RATE;
+                double eur = usd / exchangeRateSource.eur();
                 inputField.setText(String.format("%.2f", eur));
             } catch (NumberFormatException ex) {
                 showError();
@@ -105,12 +106,16 @@ public class CurrencyCalculator extends JFrame {
     }
 
     public static void main(String[] args) {
-        /*
-         * Swing Thread Initialization
-         * Using an anonymous inline construct / Lambda variant on the Event Dispatch Thread.
-         */
+        ExchangeRateSource source;
+        if (args.length == 0) {
+            source = new ExchangeRateSourceLocal();
+        } else {
+            source = new ExchangeRateSourceService();
+        }
+
+        ExchangeRateSource finalSource = source;
         SwingUtilities.invokeLater(() -> {
-            CurrencyCalculator calculator = new CurrencyCalculator();
+            CurrencyCalculator calculator = new CurrencyCalculator(finalSource);
             calculator.setVisible(true);
         });
     }
