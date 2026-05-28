@@ -1,6 +1,6 @@
 package de.dhbwka.java.exercise.ui.currency;
 
-public class Test {
+public class TestExternal {
     static void main() {
         FromServer service = new FromServer();
         System.out.println(service.eur());
