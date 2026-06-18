@@ -2,32 +2,43 @@ package de.dhbwka.java.exercise.collections.librarian;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.List;
 
 /**
- * GUI-Applikation für eine Bibliotheksverwaltung mit BibTeX-Unterstützung.
+ * GUI Application for Library Management with BibTeX support.
+ * Features:
+ * - Load existing entries from a file.
+ * - Add new unique entries.
+ * - Display all entries in a scrollable table.
+ * - Sort entries via pop-up windows (author, title, year, publisher).
  */
 public class LibraryApp {
     private final Library library = new Library();
     private String currentFilePath = null;
+
+    // GUI Components
+    private JFrame mainFrame;
+    private JTable booksTable;
+    private DefaultTableModel tableModel;
+    private JTextField authorField, titleField, yearField, publisherField;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new LibraryApp().startGUI());
     }
 
     private void startGUI() {
-        JFrame frame = new JFrame("Bibliotheksverwaltung");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 400);
-        frame.setLayout(new BorderLayout());
+        mainFrame = new JFrame("Bibliotheksverwaltung");
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setSize(800, 600);
+        mainFrame.setLayout(new BorderLayout());
 
-        // Menüleiste
+        // Menu Bar
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("Datei");
 
@@ -40,102 +51,169 @@ public class LibraryApp {
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
         menuBar.add(fileMenu);
+        mainFrame.setJMenuBar(menuBar);
 
-        frame.setJMenuBar(menuBar);
+        // Input Panel (top)
+        JPanel inputPanel = createInputPanel();
+        mainFrame.add(inputPanel, BorderLayout.NORTH);
 
-        // Eingabebereich
-        JPanel inputPanel = new JPanel(new GridLayout(5, 2, 5, 5));
-        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Table Panel (center) – Scrollable
+        JPanel tablePanel = createTablePanel();
+        mainFrame.add(tablePanel, BorderLayout.CENTER);
 
-        JLabel authorLabel = new JLabel("Autor:");
-        JTextField authorField = new JTextField();
+        // Sort & Action Buttons (bottom)
+        JPanel bottomPanel = createBottomPanel();
+        mainFrame.add(bottomPanel, BorderLayout.SOUTH);
 
-        JLabel titleLabel = new JLabel("Titel:");
-        JTextField titleField = new JTextField();
+        mainFrame.setLocationRelativeTo(null);
+        mainFrame.setVisible(true);
 
-        JLabel yearLabel = new JLabel("Jahr:");
-        JTextField yearField = new JTextField();
+        // Optional: Load default file on startup
+        // loadLibrary(); // Uncomment if you want automatic load
+    }
 
-        JLabel publisherLabel = new JLabel("Verlag:");
-        JTextField publisherField = new JTextField();
+    private JPanel createInputPanel() {
+        JPanel panel = new JPanel(new GridLayout(5, 2, 5, 5));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        panel.add(new JLabel("Autor:"));
+        authorField = new JTextField();
+        panel.add(authorField);
+
+        panel.add(new JLabel("Titel:"));
+        titleField = new JTextField();
+        panel.add(titleField);
+
+        panel.add(new JLabel("Jahr:"));
+        yearField = new JTextField();
+        panel.add(yearField);
+
+        panel.add(new JLabel("Verlag:"));
+        publisherField = new JTextField();
+        panel.add(publisherField);
 
         JButton addButton = new JButton("Hinzufügen");
-        addButton.addActionListener(e -> {
-            String author = authorField.getText().trim();
-            String title = titleField.getText().trim();
-            String year = yearField.getText().trim();
-            String publisher = publisherField.getText().trim();
+        addButton.addActionListener(e -> addBook());
 
-            if (author.isEmpty() || title.isEmpty() || year.isEmpty() || publisher.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Bitte alle Felder ausfüllen!", "Fehler", JOptionPane.ERROR_MESSAGE);
-                return;
+        panel.add(new JLabel()); // spacer
+        panel.add(addButton);
+
+        return panel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Table Model
+        String[] columnNames = {"Autor", "Titel", "Jahr", "Verlag"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table read-only
             }
+        };
 
-            Book newBook = new Book(author, title, year, publisher);
-            if (!containsBook(newBook)) {
-                library.addBook(newBook);
-                JOptionPane.showMessageDialog(frame, "Buch hinzugefügt: " + title, "Erfolg", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(frame, "Buch existiert bereits!", "Hinweis", JOptionPane.WARNING_MESSAGE);
-            }
-            clearFields(authorField, titleField, yearField, publisherField);
-        });
+        booksTable = new JTable(tableModel);
+        booksTable.setAutoCreateRowSorter(true); // Enable column sorting
+        booksTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        booksTable.setRowHeight(22);
 
-        inputPanel.add(authorLabel);
-        inputPanel.add(authorField);
-        inputPanel.add(titleLabel);
-        inputPanel.add(titleField);
-        inputPanel.add(yearLabel);
-        inputPanel.add(yearField);
-        inputPanel.add(publisherLabel);
-        inputPanel.add(publisherField);
-        inputPanel.add(new JLabel()); // Leerzeile
-        inputPanel.add(addButton);
+        JScrollPane scrollPane = new JScrollPane(booksTable);
+        scrollPane.setPreferredSize(new Dimension(750, 400));
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        frame.add(inputPanel, BorderLayout.CENTER);
+        return panel;
+    }
 
-        // Sortier-Buttons
-        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+    private JPanel createBottomPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+
         String[] sortCriteria = {"Autor", "Titel", "Jahr", "Verlag"};
-
         for (String criterion : sortCriteria) {
-            JButton sortButton = new JButton("Sortiert nach " + criterion);
-            sortButton.addActionListener(e -> showSortedBooks(criterion.toLowerCase()));
-            sortPanel.add(sortButton);
+            JButton b = new JButton("Sortiert: " + criterion);
+            b.addActionListener(e -> showSortedBooks(criterion.toLowerCase()));
+            panel.add(b);
         }
 
-        frame.add(sortPanel, BorderLayout.SOUTH);
+        return panel;
+    }
 
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    private void addBook() {
+        String author = authorField.getText().trim();
+        String title = titleField.getText().trim();
+        String year = yearField.getText().trim();
+        String publisher = publisherField.getText().trim();
 
-        // Optional: Automatisches Laden beim Start
-        loadLibrary();
+        if (author.isEmpty() || title.isEmpty() || year.isEmpty() || publisher.isEmpty()) {
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Bitte alle Felder ausfüllen!", "Fehler", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Book newBook = new Book(author, title, year, publisher);
+        if (!containsBook(newBook)) {
+            library.addBook(newBook);
+            updateTable();
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Buch hinzugefügt: " + title, "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Buch existiert bereits!", "Hinweis", JOptionPane.WARNING_MESSAGE);
+        }
+        clearFields();
+    }
+
+    private boolean containsBook(Book newBook) {
+        for (Book b : library.getBooks()) {
+            if (b.getAuthor().equalsIgnoreCase(newBook.getAuthor()) &&
+                    b.getTitle().equalsIgnoreCase(newBook.getTitle()) &&
+                    b.getYear().equalsIgnoreCase(newBook.getYear()) &&
+                    b.getPublisher().equalsIgnoreCase(newBook.getPublisher())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateTable() {
+        tableModel.setRowCount(0); // Clear table
+        for (Book book : library.getBooks()) {
+            tableModel.addRow(new Object[]{
+                    book.getAuthor(),
+                    book.getTitle(),
+                    book.getYear(),
+                    book.getPublisher()
+            });
+        }
     }
 
     private void loadLibrary() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("BibTeX-Dateien (*.bib)", "bib"));
-        int result = fileChooser.showOpenDialog(null);
-
+        JFileChooser fc = new JFileChooser();
+        fc.setFileFilter(new FileNameExtensionFilter("BibTeX Files (*.bib)", "bib"));
+        int result = fc.showOpenDialog(mainFrame);
         if (result == JFileChooser.APPROVE_OPTION) {
-            currentFilePath = fileChooser.getSelectedFile().getAbsolutePath();
+            currentFilePath = fc.getSelectedFile().getAbsolutePath();
             try {
                 library.importFromBibTeX(currentFilePath);
-                JOptionPane.showMessageDialog(null, "BibTeX-Datei erfolgreich geladen.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                updateTable();
+                JOptionPane.showMessageDialog(mainFrame,
+                        "Geladen: " + library.getBooks().size() + " Bücher.", "Info", JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Fehler beim Laden der BibTeX-Datei: " + e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(mainFrame,
+                        "Fehler beim Laden: " + e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void saveLibrary() {
         if (currentFilePath == null) {
-            JOptionPane.showMessageDialog(null, "Keine Datei zum Speichern ausgewählt.", "Fehler", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Keine Datei zum Speichern gewählt.", "Fehler", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentFilePath, false))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentFilePath))) {
             for (Book book : library.getBooks()) {
                 writer.write(String.format("@book{%s,%n", UUID.randomUUID().toString().substring(0, 8)));
                 writer.write(String.format("  author = {%s},%n", book.getAuthor()));
@@ -144,19 +222,22 @@ public class LibraryApp {
                 writer.write(String.format("  publisher = {%s}%n", book.getPublisher()));
                 writer.write("}\n\n");
             }
-            JOptionPane.showMessageDialog(null, "Bibliothek erfolgreich gespeichert.", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Gespeichert erfolgreich.", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Fehler beim Speichern: " + e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Fehler beim Speichern: " + e.getMessage(), "Fehler", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void showSortedBooks(String criterion) {
         if (library.getBooks().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Keine Bücher zum Anzeigen vorhanden.", "Hinweis", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Keine Bücher zum Anzeigen.", "Hinweis", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
-        java.util.List<Book> sortedBooks = library.sortBooks(criterion);
+        List<Book> sortedBooks = library.sortBooks(criterion);
         String title = "Sortiert nach " + criterion.substring(0, 1).toUpperCase() + criterion.substring(1);
 
         JTextArea textArea = new JTextArea();
@@ -169,33 +250,21 @@ public class LibraryApp {
         }
         textArea.setText(sb.toString());
 
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(600, 400));
+        JScrollPane scroll = new JScrollPane(textArea);
+        scroll.setPreferredSize(new Dimension(600, 400));
 
-        JDialog dialog = new JDialog();
-        dialog.setTitle(title);
+        JDialog dialog = new JDialog(mainFrame, title, true);
         dialog.setLayout(new BorderLayout());
-        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(scroll, BorderLayout.CENTER);
         dialog.pack();
-        dialog.setLocationRelativeTo(null);
+        dialog.setLocationRelativeTo(mainFrame);
         dialog.setVisible(true);
     }
 
-    private boolean containsBook(Book newBook) {
-        for (Book book : library.getBooks()) {
-            if (book.getAuthor().equalsIgnoreCase(newBook.getAuthor()) &&
-                    book.getTitle().equalsIgnoreCase(newBook.getTitle()) &&
-                    book.getYear().equalsIgnoreCase(newBook.getYear()) &&
-                    book.getPublisher().equalsIgnoreCase(newBook.getPublisher())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void clearFields(JTextField... fields) {
-        for (JTextField field : fields) {
-            field.setText("");
-        }
+    private void clearFields() {
+        authorField.setText("");
+        titleField.setText("");
+        yearField.setText("");
+        publisherField.setText("");
     }
 }
