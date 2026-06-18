@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project basedir="." default="jar" name="bibtex2rdf">
+<!-- created by Wolf Siberski -->
+<!-- build file for Bibtex-to-RDF converter -->
+        
+<!-- setting the prefix for einvironment -->
+  <property environment="env" />
+<!-- setting the environment variable -->
+  <property name="src" value="${basedir}/src" />
+  <property name="lib" value="${basedir}/lib" />
+  <property name="resources" value="${basedir}/resources" />
+  <property name="tests" value="${basedir}/test" />
+<!-- should be a test in order to set output dir to something else -->
+  <property name="distroot" value="${basedir}" />
+  <property name="build" value="${distroot}/distclasses" />
+  <property name="dist" value="${distroot}/dist" />
+  <property name="doc" value="${distroot}/doc" />
+  <property name="version" value="1.0beta5" />
+  
+<!-- setting the Start root dir   -->
+  <property name="startrootdir" value="${basedir}" />
+
+<!-- classpath infos -->
+  <path id="alllibs">
+    <fileset dir="${lib}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+
+<!-- necessary classpath for testenvironronemt -->
+  <path id="runclasspath">
+    <pathelement location="${dist}/bibtex2rdf.jar" />
+    <path refid="alllibs" />
+  </path>
+
+<!-- TARGETS  !!!!!!!-->
+<!-- Create the build directory structure used by compile -->
+  <target name="preparebuild">
+    <tstamp />
+    <delete dir="${build}" />
+    <mkdir dir="${build}" />
+  </target>
+<!-- Create the dist directory structure used by jar creations -->
+  <target name="preparedist">
+    <tstamp />
+    <delete dir="${dist}" />
+    <mkdir dir="${dist}" />
+  </target>
+  
+<!--- compile the whole source -->
+  <target depends="preparebuild" name="compile">
+<!--  	<javacc target="${src}/bibtex/rdf/labeling/label.jj"/> -->
+    <javac debug="on" destdir="${build}" srcdir="${src}" source="5" encoding="cp1252">
+      <classpath refid="alllibs" />
+    </javac>
+  </target>
+
+	<!--- creates  the jar file without required libraries -->
+	  <target depends="compile, preparedist" name="jar">
+	    <!-- Put everything in ${build} into the bibtex2rdf.jar file -->
+	    <jar basedir="${build}" manifest="${resources}/MANIFEST.MF" 
+	    	 jarfile="${dist}/bibtex2rdf-1.0b4-farrar.jar" />
+	  </target>	
+	
+<!--- creates  the whole jar file including all libs -->
+  <target depends="compile, preparedist, source" name="dist">
+  	<!-- extract all libs to build dir -->
+  	    <unzip dest="${build}">
+  	      <fileset dir="${lib}">
+  	        <include name="*.jar" />
+  	      </fileset>
+  	    </unzip>
+  	<!-- copy log4j.properties -->
+  	<copy file="${resources}/log4j.properties" toDir="${build}"/>
+    <!-- Put everything in ${build} into the edutella.jar file -->
+    <jar basedir="${build}" manifest="${resources}/MANIFEST.MF" 
+    	 jarfile="${dist}/bibtex2rdf-${version}.jar" />
+  </target>
+  
+	<!--- creates zip file of sources -->
+	  <target depends="preparedist" name="source">
+	  	<!-- extract all libs to build dir -->
+	  	    <zip destfile="${dist}/bibtex2rdf-${version}-src.zip">
+				<fileset dir="${basedir}">
+	  	    		<include name="src/**"/> 
+					<include name="resources/**"/>					
+					<include name="test/**"/>					
+					<include name="doc/**"/>					
+					<include name="build.xml"/>					
+				</fileset>
+	  	    </zip>
+	  </target>
+	
+<!-- cleans the dist all -->
+  <target name="cleanall">
+<!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}" />
+    <delete dir="${dist}" />
+  </target>
+</project>

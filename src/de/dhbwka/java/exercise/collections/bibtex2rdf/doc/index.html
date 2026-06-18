@@ -1,0 +1,862 @@
+<html><head>
+
+<title>bibtex2rdf - A configurable BibTeX to RDF Converter</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head><body>
+<h1 align="center">bibtex2rdf - A configurable BibTeX to RDF Converter</h1>
+<h2>Introduction</h2>
+Many researchers use LaTeX to prepare their publications. They typically collect 
+bibliographic references in the BibTeX format, because that way LaTeX can generate 
+Reference lists automatically. In BibTeX, each reference is captured as one entry 
+consiting of (tagged) fields. For an introduction to BibTeX see the <a href="#references">references</a> 
+section. With the advent of the semantic web, several projects have started to 
+translate this bibliographic information to RDF. bibtex2rdf is a highly configurable 
+translator from BibTeX to RDF which allows to do exactly that. How it works and 
+how to use it is explained in this document. 
+<h2>Usage</h2>
+<p>The most direct approach to understand how a program works is just to try it. 
+  Therefore, we start with the usage section.</p>
+<p>bibtex2rdf is provided as jar file (the source code will be published soon). 
+  The current version is <i>1.0 beta 5</i>. Download it <a href="https://sourceforge.net/project/showfiles.php?group_id=232850">here</a>. 
+  It is a command line tool and needs a Java JDK/JRE 1.5 as prerequisite. To translate 
+  <font face="Courier New, Courier, mono">sample.bib</font> to <font face="Courier New, Courier, mono">sample.rdf</font>, 
+  type<br>
+  <font face="Courier New, Courier, mono">&nbsp;&nbsp;&nbsp;&nbsp;java -jar bibtex2rdf.jar 
+  sample.bib sample.rdf</font></p>
+<p>The complete call syntax is<font face="Courier New, Courier, mono"> java -jar 
+  bibtex2rdf.jar [-schema &lt;file&gt;] [-baseuri &lt;uri&gt;] [-enc &lt;enc&gt;] 
+  &lt;bibtex&gt; [&lt;output&gt;]</font>. For parameter explanation, see the following 
+  table. The application generates a log file (<font face="Courier New, Courier, mono">bibtex2rdf.log</font>) 
+  which contains all warnings and errors.</p>
+<table width="700">
+  <tbody><tr> 
+    <th width="25%">
+      <div align="left">Parameter</div>
+    </th>
+    <th>
+      <div align="left">Description</div>
+    </th>
+  </tr>
+  <tr> 
+    <td><font face="Courier New, Courier, mono">-schema &lt;file&gt;</font></td>
+    <td>optional schema file. see section <a href="#mapping_configuration">Mapping 
+      Configuration</a></td>
+  </tr>
+  <tr> 
+    <td><font face="Courier New, Courier, mono">-baseuri &lt;uri&gt;</font></td>
+    <td>prepend all generated uris with the specified base uri. If omitted, file 
+      local URIs will be used</td>
+  </tr>
+  <tr> 
+    <td><font face="Courier New, Courier, mono">-enc &lt;enc&gt;</font></td>
+    <td>use specified encoding. Default is ISO-8859-1. To generate Unicode format, 
+      use UTF-8 or UTF-16.</td>
+  </tr>
+  <tr> 
+    <td><font face="Courier New, Courier, mono">&lt;bibtex&gt;</font></td>
+    <td>this file is translated to RDF. If it is a directory, bibtex2rdf scans 
+      it (and its sub-directories) and translates all files found which have a 
+      .bib suffix</td>
+  </tr>
+  <tr> 
+    <td><font face="Courier New, Courier, mono">&lt;output&gt;</font></td>
+    <td>the result is written to this file. If omitted, the result is written 
+      to stdout</td>
+  </tr>
+</tbody></table>  
+<h2>Feedback</h2>
+If you detect a bug or want to suggest an additional feature, please send me a 
+mail. My mail address can be found on my homepage
+<h2>The mapping</h2>
+The mapping is higly configurable. This section describes the default mapping. 
+For a description of all mapping configuration options see the section <a href="#mapping_configuration">Mapping 
+Configuration</a>. 
+<p>For each BibTeX entry at least one resource is generated. If an entry has authors 
+  and/or editors, we generate a separate resource to describe each author. Thus, 
+  it is possible to use the same resource if one person has authored or edited 
+  several publications. The same applies to publications which are part of a collection 
+  (conference, journal, book, etc.). In this case the collection is modelled as 
+  a separate resource, and all fields which relate to the collection instead of 
+  the publication become also properties of the collection (e.g. publisher, editor, 
+  address, year, month). We do not (yet) create a resource to identify a journal 
+  or conference series, in other words: each journal number is modeled as a separate 
+  collection. Also, in contrast to the person data we do not (yet) attempt to 
+  identify identical collections and merge them to one resource. </p>
+<h3>Example</h3>
+<p>The second-most direct approach to understand a translation is an example. 
+  Therefore we present it here before going into the details. The BibTeX entry</p>
+<pre>@InProceedings{aberer2003chatty,
+  author =   {Karl Aberer and Philippe Cudr�-Mauroux and Manfred Hauswirth},
+  title =    {The Chatty Web: Emergent Semantics Through Gossiping},
+  booktitle = {Proceedings of the Twelfth International World Wide Web Conference},
+  location = {Budapest, Hungary},
+  year =     {2003},
+  month =    {May},
+  pages = {197--206},
+  publisher = {ACM Press},
+  address =  {New York, USA},
+  url = {http://www2003.org/cdrom/papers/refereed/p471/471-aberer.html}
+}
+</pre>
+is converted to 
+<pre>&lt;?xml version='1.0' encoding='ISO-8859-1'?&gt;
+&lt;rdf:RDF
+    xmlns:bibtex="http://www.edutella.org/bibtex#"
+    xmlns:dct="http://purl.org/dc/terms/"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:vcard="http://www.w3.org/2001/vcard-rdf/3.0#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"&gt;
+
+    &lt;bibtex:InProceedings rdf:about="aberer2003chatty"
+     dc:date="2003-05"
+     bibtex:pages="197-206"&gt;
+    &lt;dc:title&gt;The Chatty Web: Emergent Semantics Through Gossiping&lt;/dc:title&gt;
+    &lt;dct:isPartOf&gt;
+      &lt;bibtex:Proceedings
+         dc:date="2003-05"&gt;
+        &lt;dc:title&gt;Proceedings of the Twelfth International World Wide Web Conference&lt;/dc:title&gt;
+        &lt;vcard:ADR
+           vcard:Locality="Budapest"
+           vcard:Country="Hungary"/&gt;
+        &lt;dc:publisher rdf:resource="aberer2003chatty:ACM_Press"/&gt;
+    &lt;/bibtex:Proceedings&gt;
+    &lt;/dct:isPartOf&gt;
+    &lt;dc:identifier&gt;http://www2003.org/cdrom/papers/refereed/p471/471-aberer.html&lt;/dc:identifier&gt;
+    &lt;dc:publisher rdf:resource="aberer2003chatty:ACM_Press"/&gt;
+    &lt;dc:creator&gt;
+      &lt;rdf:Seq&gt;
+        &lt;rdf:li rdf:resource="aberer2003chatty:Aberer_Karl"/&gt;
+        &lt;rdf:li rdf:resource="aberer2003chatty:Cudré-Mauroux_Philippe"/&gt;
+        &lt;rdf:li rdf:resource="aberer2003chatty:Hauswirth_Manfred"/&gt;
+      &lt;/rdf:Seq&gt;
+    &lt;/dc:creator&gt;
+  &lt;/bibtex:InProceedings&gt;
+
+  &lt;bibtex:Person rdf:about="aberer2003chatty:Aberer_Karl"&gt;
+    &lt;vcard:FN&gt;Karl Aberer&lt;/vcard:FN&gt;
+    &lt;vcard:N
+       vcard:Family="Aberer"
+       vcard:Given="Karl"/&gt;
+  &lt;/bibtex:Person&gt;
+  &lt;bibtex:Person rdf:about="aberer2003chatty:Hauswirth_Manfred"&gt;
+    &lt;vcard:N
+       vcard:Given="Manfred"
+       vcard:Family="Hauswirth"/&gt;
+    &lt;vcard:FN&gt;Manfred Hauswirth&lt;/vcard:FN&gt;
+  &lt;/bibtex:Person&gt;
+  &lt;bibtex:Person rdf:about="aberer2003chatty:Cudré-Mauroux_Philippe"&gt;
+    &lt;vcard:FN&gt;Philippe Cudré-Mauroux&lt;/vcard:FN&gt;
+    &lt;vcard:N
+       vcard:Given="Philippe"
+       vcard:Family="Cudré-Mauroux"/&gt;
+  &lt;/bibtex:Person&gt;
+
+  &lt;bibtex:Organization rdf:about="aberer2003chatty:ACM_Press"&gt;
+    &lt;vcard:ADR rdf:parseType="Resource"&gt;
+      &lt;vcard:Country&gt;USA&lt;/vcard:Country&gt;
+      &lt;vcard:Locality&gt;New York&lt;/vcard:Locality&gt;
+    &lt;/vcard:ADR&gt;
+    &lt;vcard:FN&gt;ACM Press&lt;/vcard:FN&gt;
+  &lt;/bibtex:Organization&gt;
+&lt;/rdf:RDF&gt;
+
+</pre>
+<h2></h2>
+<h3>Used RDF Schemas</h3>
+For our mapping, we have tried to use as many existing RDF schema elements as 
+possible, instead of inventing a new schema. However, this was not possible in 
+all cases. For example, there is no common classification similar to the BibTeX 
+entry types. We use the following namespace and abbreviations: 
+<table>
+  <tbody><tr> 
+    <th>
+      <div align="left">Abbreviation</div>
+    </th>
+    <th>
+      <div align="left">Namespace URI</div>
+    </th>
+    <th>
+      <div align="left">Comment</div>
+    </th>
+  </tr>
+  <tr> 
+    <td>dc</td>
+    <td>http://purl.org/dc/elements/1.1/</td>
+    <td>Dublin Core Standardized Schema for basic bibliographic metadata</td>
+  </tr>
+  <tr> 
+    <td>dct</td>
+    <td>http://purl.org/dc/terms/</td>
+    <td>Dublin Core Metadata Terms to refine the basic elements</td>
+  </tr>
+  <tr> 
+    <td>vcard</td>
+    <td>http://www.w3.org/2001/vcard-rdf/3.0#</td>
+    <td>RDF mapping of vCard person and address data</td>
+  </tr>
+  <tr> 
+    <td>bibtex</td>
+    <td>http://www.edutella.org/bibtex#</td>
+    <td>New schema to capture all remaining elements</td>
+  </tr>
+</tbody></table>
+<h3>Standard entry types and their mapping</h3>
+(Descriptions taken from <a href="http://www.ecst.csuchico.edu/%7Ejacobsd/bib/formats/bibtex.html">The 
+BibTex Format</a>) 
+<table>
+  <tbody><tr> 
+    <th>
+      <div align="left">BibTeX Type</div>
+    </th>
+    <th>
+      <div align="left">RDF Type</div>
+    </th>
+    <th>
+      <div align="left">Comment</div>
+    </th>
+  </tr>
+  <tr> 
+    <td><tt>@article</tt></td>
+    <td>bibtex:Article</td>
+    <td>An article from a journal or magazine.</td>
+  </tr>
+  <tr> 
+    <td><tt>@book</tt></td>
+    <td>bibtex:Book</td>
+    <td>A book with an explicit publisher.</td>
+  </tr>
+  <tr> 
+    <td><tt>@booklet</tt></td>
+    <td>bibtex:Booklet</td>
+    <td>A work that is printed and bound, but without a named publisher or sponsoring 
+      institution.</td>
+  </tr>
+  <tr> 
+    <td><tt>@conference</tt></td>
+    <td>bibtex:InProceedings</td>
+    <td>The same as <tt>inproceedings</tt>.</td>
+  </tr>
+  <tr> 
+    <td><tt>@inbook</tt></td>
+    <td>bibtex:InBook</td>
+    <td>A part of a book, which may be a chapter (or section or whatever) and/or 
+      a range of pages.</td>
+  </tr>
+  <tr> 
+    <td><tt>@incollection</tt></td>
+    <td>bibtex:InCollection</td>
+    <td>A part of a book having its own title.</td>
+  </tr>
+  <tr> 
+    <td><tt>@inproceedings</tt></td>
+    <td>bibtex:InProceedings</td>
+    <td>An article in a conference proceedings.</td>
+  </tr>
+  <tr> 
+    <td><tt>@manual</tt></td>
+    <td>bibtex:Manual</td>
+    <td>Technical documentation.</td>
+  </tr>
+  <tr> 
+    <td><tt>@mastersthesis</tt></td>
+    <td>bibtex:MastersThesis</td>
+    <td>A Master's thesis.</td>
+  </tr>
+  <tr> 
+    <td><tt>@misc</tt></td>
+    <td>bibtex:Misc</td>
+    <td>Use this type when nothing else fits.</td>
+  </tr>
+  <tr> 
+    <td><tt>@phdthesis</tt></td>
+    <td>bibtex:PhDThesis</td>
+    <td>A PhD thesis.</td>
+  </tr>
+  <tr> 
+    <td><tt>@proceedings</tt></td>
+    <td>bibtex:Proceedings</td>
+    <td>The proceedings of a conference.</td>
+  </tr>
+  <tr> 
+    <td><tt>@techreport</tt></td>
+    <td>bibtex:TechReport</td>
+    <td>A report published by a school or other institution, usually numbered 
+      within a series.</td>
+  </tr>
+  <tr> 
+    <td><tt>@unpublished</tt></td>
+    <td>bibtex:Unpublished</td>
+    <td>A document having an author and title, but not formally published.</td>
+  </tr>
+  <tr> 
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr> 
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</tbody></table>
+Non-standard entry types are not supported. 
+<h3>Standard fields</h3>
+&lt;
+    /tr&gt; 
+  <table>
+  <tbody><tr> 
+    <th>
+      <div align="left">BibTeX field</div>
+    </th>
+    <th>
+      <div align="left">RDF property</div>
+    </th>
+    <th>
+      <div align="left">BibTeX Comment</div>
+    </th>
+    <th>
+      <div align="left">RDF Mapping Comment</div>
+    </th>
+  </tr>
+  <tr> 
+    <td><tt>address</tt></td>
+    <td>vcard:Locality, vcard:Country</td>
+    <td>For journals, books, etc. usually the address of the <tt>publisher</tt> 
+      or other type of institution. For proceedings, often the location of the 
+      event</td>
+    <td>If the field contains a comma the text after the last comma is taken as 
+      vcard:Country, everything before the comma as vcard:Locality</td>
+  </tr>
+  <tr> 
+    <td><tt>annote</tt></td>
+    <td>bibtex:annote</td>
+    <td>An annotation. It is not used by the standard bibliography styles, but 
+      may be used by others that produce an annotated bibliography.</td>
+    <td>The content in this field is not cleared from special TeX formatting, 
+      but left unchanged</td>
+  </tr>
+  <tr> 
+    <td><tt>author</tt></td>
+    <td>dc:creator</td>
+    <td>The name(s) of the author(s), in the format described in the LaTeX book.</td>
+    <td>Authors are listed as element of an rdf:Seq. For each author a resource 
+      with the properties vcard:FN and vcard:N are created. the vcard:N resource 
+      gets the properties vcard:Family, and vcard:Given, vcard:Others, vcard:Prefix 
+      and vcard:Suffix, if these parts appear in the name. </td>
+  </tr>
+  <tr> 
+    <td><tt>booktitle</tt></td>
+    <td>dct:isPartOf</td>
+    <td>Title of a book (or other collection), part of which is being cited.</td>
+    <td>Booktitles are handled as collections. If the entry is of type inproceedings, 
+      the representing resource is typed bibtex:Proceedings</td>
+  </tr>
+  <tr> 
+    <td><tt>chapter</tt></td>
+    <td>bibtex:chapter</td>
+    <td>A chapter (or section or whatever) number.</td>
+    <td>default mapping. The LaTeX commands commonly used in bibtex files (e.g. 
+      accents) are handled</td>
+  </tr>
+  <tr> 
+    <td><tt>crossref</tt></td>
+    <td>dct:isPartOf</td>
+    <td>The database key of the entry being cross referenced. Any fields that 
+      are missing from the current record are inherited from the field being cross 
+      referenced.</td>
+    <td>A reference to the resource created for the crossref'd entry is created</td>
+  </tr>
+  <tr> 
+    <td><tt>edition</tt></td>
+    <td>bibtex:edition</td>
+    <td>The edition of a book---for example, ``Second''.</td>
+    <td>default mapping</td>
+  </tr>
+  <tr> 
+    <td><tt>editor</tt></td>
+    <td>dc:creator</td>
+    <td>Name(s) of editor(s), typed as indicated in the LaTeX book. If there is 
+      also an <tt>author</tt> field, then the <tt>editor</tt> field gives the 
+      editor of the book or collection in which the reference appears.</td>
+    <td>the editor is added to the collection resource, as author. 
+  </td></tr>
+  <tr> 
+    <td><tt>howpublished</tt></td>
+    <td>bibtex:howpublished</td>
+    <td>How something strange has been published.</td>
+    <td>default mapping</td>
+  </tr>
+  <tr> 
+    <td><tt>institution</tt></td>
+    <td>bibtex:institution</td>
+    <td>The sponsoring institution of a technical report.</td>
+    <td>This field is handled as organization</td>
+  </tr>
+  <tr> 
+    <td><tt>journal</tt></td>
+    <td>dct:isPartOf</td>
+    <td>A journal name.</td>
+    <td>Journals are handled as collections. Resources representing Journals are 
+      typed bibtex:Journal.</td>
+  </tr>
+  <tr> 
+    <td><tt>key</tt></td>
+    <td>dc:identifier</td>
+    <td>Used for alphabetizing, cross referencing, and creating a label when the 
+      ``author'' information is missing.</td>
+    <td>default mapping</td>
+  </tr>
+  <tr> 
+    <td><tt>location</tt></td>
+    <td>vcard:Locality, vcard:Country</td>
+    <td>A location associated with the entry, such as the city in which a conference 
+      took place.</td>
+    <td>handled as address</td>
+  </tr>
+  <tr> 
+    <td><tt>month</tt></td>
+    <td>dc:date</td>
+    <td>The month in which the work was published or, for an unpublished work, 
+      in which it was written.</td>
+    <td>the month field is merged with the year field to form the dc:date property</td>
+  </tr>
+  <tr> 
+    <td><tt>note</tt></td>
+    <td>bibtex:note</td>
+    <td>Any additional information that can help the reader.</td>
+    <td>The content in this field is not cleared from special TeX formatting, 
+      but left unchanged</td>
+  </tr>
+  <tr> 
+    <td><tt>number</tt></td>
+    <td>bibtex:number</td>
+    <td>The number of a journal, magazine, technical report, or of a work in a 
+      series.</td>
+    <td>default mapping. This information is added to the collection resource</td>
+  </tr>
+  <tr> 
+    <td><tt>organization</tt></td>
+    <td>bibtex:organization</td>
+    <td>The organization that sponsors a conference or that publishes a <tt>manual</tt>.</td>
+    <td>This field is handled as organization</td>
+  </tr>
+  <tr> 
+    <td><tt>pages</tt></td>
+    <td>bibtex:pages</td>
+    <td>One or more page numbers or range of numbers, such as <tt>42--111</tt> 
+      or <tt>7,41,73--97</tt> or <tt>43+</tt></td>
+    <td>Consecutive hyphen chars are transformed to exactly one hyphen.</td>
+  </tr>
+  <tr> 
+    <td><tt>publisher</tt></td>
+    <td>dc:publisher</td>
+    <td>The publisher's name.</td>
+    <td>This field is handled as organization</td>
+  </tr>
+  <tr> 
+    <td><tt>school</tt></td>
+    <td>bibtex:school</td>
+    <td>The name of the school where a thesis was written.</td>
+    <td>This field is handled as organization</td>
+  </tr>
+  <tr> 
+    <td><tt>series</tt></td>
+    <td>dc:isPartOf</td>
+    <td>The name of a series or set of books.</td>
+    <td>this field is handled as collection</td>
+  </tr>
+  <tr> 
+    <td><tt>title</tt></td>
+    <td>dc:title</td>
+    <td>The work's title, typed as explained in the LaTeX book.</td>
+    <td>default mapping</td>
+    </tr><tr> 
+    <td><tt>type</tt></td>
+    <td>bibtex:type</td>
+    <td>The type of a technical report---for example, ``Research Note''.</td>
+    <td>default mapping</td>
+  </tr>
+  <tr> 
+    <td><tt>url</tt></td>
+    <td>dc:identifier</td>
+    <td>The WWW Universal Resource Locator that points to the item being referenced</td>
+    <td>default mapping</td>
+  </tr>
+  <tr> 
+    <td><tt>volume</tt></td>
+    <td>bibtex:volume</td>
+    <td>The volume of a journal or multi-volume book.</td>
+    <td>default mapping. This information is added to the collection resource</td>
+  </tr>
+  <tr> 
+    <td><tt>year</tt></td>
+    <td>dc:date</td>
+    <td>The year of publication or, for an unpublished work, the year it was written.</td>
+    <td>In W3CDTF format. If the month field is available, month and year information 
+      are merged.</td>
+  </tr>
+</tbody></table>
+<h2><a name="mapping_configuration">Mapping Configuration</a></h2>
+<p>The mapping can be configured via a Java properties file. We show a commented 
+  sample file with commented entries which represents the default configuration. 
+  Exactly this default configuration is used when not specifying a <font face="Courier New, Courier, mono">'-schema'</font> 
+  argument. If you write your own configuration files, you need only to include 
+  properties which values are different from the default. See below for links 
+  to other configuration files.</p>
+<p><b>Important Note: the mapping configuration file format is subject to change 
+  in upcoming beta versions.</b></p>
+<p>&nbsp;</p>
+<pre>##########################################################
+# Namespaces
+
+##########################################################
+
+
+# declare namespaces in the form
+# ns_&lt;shorthand&gt;=&lt;uri&gt;
+ns_rdfs=http://www.w3.org/2000/01/rdf-schema#
+ns_dc=http://purl.org/dc/elements/1.1/<br>ns_dct=http://purl.org/dc/terms/
+ns_vcard=http://www.w3.org/2001/vcard-rdf/3.0#
+# if a namespace with shorthand 'unknown' is declared, 
+# this namespace is used to create RDF property names
+# for unknown BibTeX fields.
+# By default, unknown fields are ignored.
+#ns_unknown=http://www.edutella.org/bibtex_unknown/
+
+# if a namespace with shorthand 'bibtex' is declared, 
+# this namespace is used to create RDF property names
+# for known BibTeX types and fields, if they
+# arent mapped to DC or RDF properties
+ns_bibtex=http://www.edutella.org/bibtex#
+
+
+##########################################################
+# Flags
+##########################################################
+
+# flags control the way the output is structured
+
+# create a property where year and month are merged as
+# one property (in the form YYYY-MM)
+createDate=true
+
+# try to create an address resource and split the 
+# address field into components (Locality and Country)
+createAddressResource=true
+    
+# create a Seq for author and editor lists.
+# if this flag is set to false, each author/editor
+# is added directly as property to the entry resource
+createSeqForPersonList=true
+
+# create a separate resource for each author/editor.
+# If this flag is false, the fullname is used as
+# property value.
+createPersonResource=true
+
+# create separate resources for collections
+# (proceedings, journals, etc.).
+# If this flag is false, the collection title
+# (and all other collection related information)
+# is added directly to the entry resource.
+createCollectionResource=true
+
+# add a Seq of all generated entries to the output.
+# creates a Seq which contains all entry references.
+# this allows to preserve the entry order information.
+# the URI of this sequence will be &lt;baseUri&gt;+"referenceList"
+createEntryList=true
+
+# add datatype declarations to all literals
+createDatatypes=false
+
+# to overwrite default datatypes, use the following entries
+# all other fields are of type xsd:string and currently not overwritable
+yearType=http://www.w3.org/2001/XMLSchema#nonNegativeInteger
+numberType=http://www.w3.org/2001/XMLSchema#nonNegativeInteger
+volumeType=http://www.w3.org/2001/XMLSchema#nonNegativeInteger
+chapterType=http://www.w3.org/2001/XMLSchema#nonNegativeInteger
+dateType=http://www.w3.org/2001/XMLSchema#gYearMonth 
+
+
+##########################################################
+# Field output lists
+##########################################################
+
+# field output lists have three purposes:
+# - they allow to restrict the output to a selected subset
+#   of fields
+# - they allow to specify which fields are collection 
+#   information and which are entry information
+# - they allow to specify if some special output is
+#   requested which doesn't directly correspond to
+#   a BibTeX field
+#   Such additional properties are:
+#   - sourceFile: outputs source file information
+#   - label:      adds a label to a resource
+#   - shortTitle: tries to extract a short title from
+#                 the title and adds it as separate
+#                 property
+#
+# as shorthand, the pseudo-field "all" is allowed to
+# specify that all fields for which a mapping is available
+# should be mapped. Note that the latter three special
+# properties are not included in "all". To get these, you
+# have to specify them additionally, as in "all, label, sourceFile".
+
+# for BibTeX entries, output all fields, but nothing special.
+entryProperties=all
+
+# for person and organization resources, output all
+# available fields. This is a full name and a
+# structured name resource according to vCard.
+personProperties=all
+
+# assign the following fields to collection resources.
+# this is the default for all collection types.
+collectionProperties=address, booktitle, crossref, editor, journal, location,\
+				     month, number, publisher, series, volume, year, shortTitle<br>
+# if you want to assign different fields to specific collection
+# types, you can overwrite the default by setting the following properties.
+proceedingsProperties=address, booktitle, location, publisher, month, volume, year
+journalProperties=address, journal, month, number, publisher, volume, year
+seriesProperties=publisher,series
+bookProperties=booktitle, editor, series, year
+
+
+# if you only want the fullname, use
+# personProperties=personFullname
+
+# if you want to output some fields just as strings, add them to the following list
+verbatimProperties=note, annote, key<br>
+
+
+##########################################################
+# Type mappings
+##########################################################
+
+# Types start with an upper case letter
+
+# Default entry types and their associated RDF types
+Article=bibtex:Article<br>Book=bibtex:Book<br>Booklet=bibtex:Publication<br>InBook=bibtex:InBook<br>InCollection=bibtex:InCollection<br>InProceedings=bibtex:InProceedings<br>Manual=bibtex:Manual<br>MastersThesis=bibtex:Masterthesis<br>Misc=bibtex:Misc<br>Periodical=bibtex:Publication<br>PhdThesis=bibtex:PhDThesis<br>Proceedings=bibtex:Proceedings<br>TechReport=bibtex:TechnicalReport<br>Unpublished=bibtex:Unpublished
+Conference=bibtex:Conference<br>
+# You may add new non-standard entry types 
+# which will be translated according to the 
+# specified mapping
+# Matharticle=bibtex:Article<br># Mastersthesis=bibtex:Masterthesis
+# Masterthesis=bibtex:Masterthesis
+# Mscthesis=bibtex:Masterthesis
+# Periodical=bibtex:Publication
+
+# Types assigned to person and organization
+# resources from the corresponding BibTeX field.
+Author=bibtex:Person
+Editor=bibtex:Person
+
+Organization=bibtex:Organization
+Institution=bibtex:Organization
+School=bibtex:Organization
+Publisher=bibtex:Organization
+
+# Types assigned to collection resources
+# They are inferred from the entry type 
+# and from the BibTeX field.
+# Proceedings and Books are already defined above
+
+# collection for @article
+Journal=bibtex:Journal
+
+# collection for series field
+Series=bibtex:Series
+
+# everything else
+Collection=bibtex:Collection
+
+# special cases
+
+# resource for the 'and other' author/editor part
+EtAl=bibtex:EtAl
+
+# type of resource which represents the source file
+BibFile=bibtex:SourceFile
+
+
+##########################################################
+# Field mappings
+##########################################################
+
+# fields start with a lower case letter
+
+# address related fields
+address=vcard:ADR
+location=vcard:ADR
+
+# date related fields
+year=bibtex:year
+month=bibtex:month
+
+# title related fields
+title=dc:title
+
+# collection related fields
+#
+# Note that in the collection resource these
+# fields are always mapped to the title property.
+#
+# if you set createCollectionResource to false,
+# you also need to change the mapping for these fields.
+booktitle=dct:isPartOf
+journal=dct:isPartOf
+series=dct:isPartOf
+crossref=dct:isPartOf
+
+# person or organization related fields
+author=dc:creator
+editor=bibtex:editor
+
+publisher=dc:publisher
+institution=bibtex:institution
+organization=bibtex:organization
+school=bibtex:school
+
+# identifier fields
+url=dc:identifier
+key=dc:identifier
+
+
+# all other bibtex fields
+annote=bibtex:annote
+chapter=bibtex:chapter
+edition=bibtex:edition
+howpublished=bibtex:howpublished
+note=bibtex:note
+number=bibtex:number
+pages=bibtex:pages
+type=bibtex:type
+volume=bibtex:volume
+    
+# fields derived from BibTeX information
+
+#used if createAddressResource
+addressCountry=vcard:Country
+addressLocality=vcard:Locality
+
+# used for the merged date
+date=dc:date
+
+# used for person and organization resources    
+personFullname=vcard:FN
+personStructuredName=vcard:N
+
+# the structured name has several parts.
+# "Charles Louis Xavier Joseph de la Vallee Poussin Jr" is
+# split as follows:<br># nameFamily = "Vallee Poussin"<br># namePrefix = "de la"<br># nameSuffix = "Jr"<br># nameGiven  = "Charles"
+# nameOther  = "Louis Xavier Joseph"<br>nameFamily=vcard:Family
+namePrefix=vcard:Prefix
+nameSuffix=vcard:Suffix
+nameGiven=vcard:Given
+nameOther=vcard:Other
+
+# property used to attach a label
+label=rdfs:label
+
+# While Persons and Organizations always get their full name as label,
+# you can specify a label pattern for entries. Use &lt;field&gt; to refer
+# to a BibTex field and 'text' to include fixed text.
+# you can concatenate any elements using +.
+# to add label components only if a specific field x exists, use
+# (&lt;x&gt;: ...), e.g. (&lt;year&gt;: ', '+&lt;year&gt;)
+# This is the default setting:
+defaultLabelPattern=&lt;title&gt;
+
+# if you want to use different pattern for different types,
+# you can overwrite the default, e.g.:
+# articleLabelPattern=(&lt;author&gt;:&lt;author&gt;+'. ')+&lt;title&gt;+(&lt;journal&gt;:'. '+&lt;journal&gt;+(&lt;volume&gt;:' '+&lt;volume&gt;+(&lt;number&gt;:'('+&lt;number&gt;+')')))+(&lt;year&gt;:', '+&lt;year&gt;)
+
+# property used to attach source file information
+sourceFile=bibtex:sourceFile
+
+# property used to add the absolute path as string
+# to the source file resource
+fileAbsolutePath=bibtex:absolutePath
+</pre>
+<h2>Other mapping tools and definitions</h2>
+<p>There are already several RDF mappings out there. For all we know we provide 
+  a configuration file. Note that no deep analysis of these mappings has taken 
+  place. Therefore the configuration file might produce slightly different results 
+  than the original converter.</p>
+<h4>BibTeX-2-RDF translator </h4>
+<p>This is an online service provided by the <a href="http://www.cs.vu.nl/%7Emcaklein/SW@VU/">SemanticWeb@VU</a> 
+  initiative at <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/www.vu.nl">Vrije Universiteit Amsterdam</a>. It is available 
+  at <a href="http://www.cs.vu.nl/%7Emcaklein/bib2rdf/">http://www.cs.vu.nl/~mcaklein/bib2rdf/</a>. 
+  This translator creates person and organization resources, but no collection 
+  resources. Also, all fields are translated into properties of the same schema. 
+  Use the file <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/mappings/VUMapping.properties">VUMapping.properties</a> 
+  (coming soon) to create similar output. 
+</p><p>
+</p><h4>Java BibTeX-To-RDF Converter</h4>
+<p>A Java application for conversion is provided at <a href="http://www.aifb.uni-karlsruhe.de/">AIFB, 
+  Universität Karlsruhe</a> as part of the <a href="http://swap.semanticweb.org/">SWAP 
+  project</a>. It is downloadable at <a href="http://www.aifb.uni-karlsruhe.de/WBS/pha/bib/index.html">http://www.aifb.uni-karlsruhe.de/WBS/pha/bib/index.html</a>. 
+  This translator creates person and organization resources, and adds source file 
+  information to them. The file <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/mappings/SWRCMapping.properties">SWRCMapping.properties</a> 
+  creates similar output, with the following exceptions: a) In the original output, 
+  the RDF type and property URIs don't have a namespace. According to Jena 2.0 
+  this isn't valid anymore. b) while person resources are created, the author/editor 
+  property isn't added to the entry resources; as this seems to be just an omission, 
+  we add these properties.</p>
+<h4>Visus BibTex Ontology in OWL</h4>
+<p>An OWL Ontology for BibTex is available at <a href="http://visus.mit.edu/bibtex/0.1/">http://visus.mit.edu/bibtex/0.1/</a>. 
+  This seems to be just a flat schema. An RDF model according to this schema can 
+  be generated with <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/mappings/VisusMapping.properties">VisusMapping.properties</a>.</p>
+<h4>MarcOnt Initiative BibTex-to-RDF Converter</h4>
+<p>As part of its mediator architecture, <a href="http://www.marcont.org/">MarcOnt</a> 
+  also provides a translater from BibTex to RDF (see <a href="http://www.marcont.org/mediations.jsp">http://www.marcont.org/mediations.jsp</a>). 
+  The OWL schema used is available at <a href="http://www.marcont.org/marcont/marcont.owl">http://www.marcont.org/marcont/marcont.owl</a> 
+  and refers to the Visus ontology. The output created by the online converter 
+  is really flat, even all author names are put into one String. An RDF model 
+  according to this schema can be generated with <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/mappings/MarcOntMapping.properties">MarcOntMapping.properties</a>.</p>
+<h2>Acknowledgments</h2>
+<p>bibtex2rdf uses several open source libraries to fulfill its task:</p>
+<table width="700">
+  <tbody><tr> 
+    <th width="150">
+      <div align="left">Library</div>
+    </th>
+    <th>
+      <div align="left">Description</div>
+    </th>
+  </tr>
+  <tr> 
+    <td><a href="http://www.cs.colorado.edu/%7Ehenkel/stuff/javabib/">JavaBib</a></td>
+    <td>a highly capable BibTeX parser, provided by <a href="http://www.l3s.de/%7Esiberski/bibtex2rdf/www.jhenkel.de">Johannes 
+      Henkel</a></td>
+  </tr>
+  <tr> 
+    <td><a href="http://jena.sourceforge.net/">Jena</a></td>
+    <td>the well-known RDF library provided by <a href="http://www.hpl.hp.com/bristol/">HP 
+      Research Labs</a></td>
+  </tr>
+  <tr> 
+    <td><a href="http://logging.apache.org/log4j">Log4J</a></td>
+    <td>the also well-known logging toolkit provided by <a href="http://www.apache.org/">Apache 
+      Software Foundation</a></td>
+  </tr>
+  <tr> 
+    <td><a href="http://www.amug.org/%7Eglguerin/sw/#macbinary">MacBinary Toolkit 2 for Java</a></td>
+    <td>provides an AccentComposer to create accented unicode chars; provided 
+      by <a href="http://logging.apache.org/log4j">Gregory Guerin</a></td>
+  </tr>
+</tbody></table>  
+<h2><a name="references">References</a></h2>
+<ul>
+  <li><cite>LaTeX: A Document Preparation System</cite> by Leslie Lamport, 1986, 
+    Addison-Wesley. 
+  </li><li><cite>BibTeXing</cite> (<a href="ftp://sunsite.unc.edu/pub/packages/TeX/biblio/bibtex/distribs/doc/btxdoc.tex"> 
+    <tt>btxdoc.tex</tt></a>), by Oren Patashnik, February 1988, (BibTeX distribution). 
+  </li><li><a href="http://www.ecst.csuchico.edu/%7Ejacobsd/bib/formats/bibtex.html">The 
+    BibTex Format.</a> A short introduction to BibTeX.
+</li></ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</body></html>
