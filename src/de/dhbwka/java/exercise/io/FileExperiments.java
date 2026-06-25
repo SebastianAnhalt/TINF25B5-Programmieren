@@ -30,9 +30,10 @@ public class FileExperiments {
 		for (File f : myDir.listFiles())
 			System.out.println(f.getAbsolutePath());
 		// Erweiterung: Alles wieder loeschen
-		for (File f : fooFiles)
+		/*for (File f : fooFiles)
 			f.delete();
 		myDir.delete();
+		*/
 	}
 }
 
