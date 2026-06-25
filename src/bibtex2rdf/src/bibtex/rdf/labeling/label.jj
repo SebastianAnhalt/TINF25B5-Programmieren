@@ -1,0 +1,166 @@
+/* Parser for label generation 
+*/
+
+
+options
+{
+   JAVA_UNICODE_ESCAPE = true ;
+   UNICODE_INPUT = false ;
+
+   STATIC = false ;
+//  DEBUG_PARSER          = true ;
+//  DEBUG_TOKEN_MANAGER   = true ;
+}
+
+PARSER_BEGIN(LabelPatternParser)
+
+package bibtex.rdf.labeling;
+
+import bibtex.dom.BibtexEntry;
+import java.io.StringReader;
+import bibtex.util.BibtexUtil;
+
+
+public class LabelPatternParser 
+{
+    private String pattern;
+     
+    public LabelPatternParser(String pattern){
+    	this(new StringReader(pattern));
+    	this.pattern = pattern;
+    }    	
+    
+    public String getLabel(BibtexEntry entry){
+        String label = "";
+        try {
+    		StringReader input = new StringReader(pattern);
+        	ReInit(input);
+            label = Label(entry);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
+        return label;
+    }
+    
+
+	private String getContent(BibtexEntry entry, String fieldName) {
+        String content;
+        if(fieldName.equals("author")||fieldName.equals("editor")){
+            content = BibtexUtil.getNameList(entry, fieldName, ", ");
+        } else {
+            content = BibtexUtil.getValue(entry, fieldName);
+        }
+        if ( content == null ) {
+        	content = "";
+        }
+        return content;
+	}
+}
+PARSER_END(LabelPatternParser)
+
+
+String Label(BibtexEntry entry) :
+    {
+    	String label ="";
+    	String sublabel;
+	}
+{	
+	label = PatternPart(entry)
+	( <PLUS>
+	  sublabel = PatternPart(entry)
+	  {
+	 	label = label + sublabel;
+	  }
+	)*
+	{
+		return label;
+	} 
+}
+
+String PatternPart(BibtexEntry entry) : 
+	{
+		String label = "";
+	}
+{	
+	(label = Literal()
+    | (
+      {
+    	String fieldName;
+      }
+      fieldName = Field() 
+      {
+      	label = getContent(entry, fieldName);
+      }
+      )
+    | label = CompositePart(entry))
+	{
+		return label;
+	} 
+}
+
+String CompositePart(BibtexEntry entry) :
+	{
+		String label = "";
+		String fieldName;
+	}
+{	
+	<LPAREN>
+	fieldName = Field()
+	<COLON>
+	label = Label(entry)
+	<RPAREN>
+	{
+		if (getContent(entry, fieldName) == "") {
+			label = "";
+		}
+		return label;
+	}
+}
+
+
+String Field() :
+	{
+		String fieldName;
+		Token fieldNameToken;
+	}
+{	
+	<LT>
+	fieldNameToken = <NAME>
+	{
+		fieldName = fieldNameToken.image;
+	}
+	<GT>
+	{
+		return fieldName;
+	}
+}
+
+String Literal() :
+	{
+		Token literalToken ;
+	}
+{	
+	literalToken = <STRING>
+	{
+		return literalToken.image.substring(1, literalToken.image.length()-1);
+	}
+}	    
+    
+TOKEN : {  < LPAREN:  "("> }
+TOKEN : {  < RPAREN:  ")"> }
+TOKEN : {  < LT:  "<"> }
+TOKEN : {  < GT:  ">"> }
+TOKEN : {  < PLUS:  "+"> }
+TOKEN : {  < COLON:  ":"> }
+
+TOKEN : {  < #DIGIT:  ["0"-"9"]> }
+TOKEN : { < #ALPHA : ["a"-"z","A"-"Z"] > }
+TOKEN : { < #SPECIAL : [" ","'",".","`", "\""] > }
+TOKEN : {  < #SPECIAL2: ["\u00b0"-"\uffff"]> }
+TOKEN : { < #LETTER : (<ALPHA> | <SPECIAL> | <SPECIAL2> ) > }
+TOKEN : { < NAME : <ALPHA> ( <LETTER> | <DIGIT> )* >}
+TOKEN : { <STRING: "'" ( ~["'","\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "'"> }
+
+
+
+
